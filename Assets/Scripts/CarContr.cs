@@ -1,33 +1,53 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Windows;
 
 public class CarContr : MonoBehaviour
 {
-    public float motorTorque = 2000;
-    public float brakeTorque = 2000;
-    public float maxSpeed = 20;
+    internal enum driveType
+    {
+        frontWheelDrive,
+        rearWheelDrive,
+        allWheelDrive
+    }
+
+    [SerializeField] private driveType drive;
+
+    public float motorTorque;
+    public float brakeTorque;
+    //public float maxSpeed;
     public float steeringRange = 30;
     public float steeringRangeAtMaxSpeed = 10;
-    public float centreOfGravityOffset = -1f;
+    public float radius = 6;
+    //public float centreOfGravityOffset = -2f;
+    public GameObject[] wheelMesh = new GameObject[4];
+    public float steeringMax = 4;
 
-    WheelController[] wheels;
-    Rigidbody rigidBody;
+    //public WheelController[] wheelControllers;
+    public WheelCollider[] wheels = new WheelCollider[4];
+    //public Rigidbody rigidBody;
 
-    void Start()
+
+   /* void Start()
     {
         rigidBody = GetComponent<Rigidbody>();
 
         rigidBody.centerOfMass += Vector3.up * centreOfGravityOffset;
 
-        wheels = GetComponentsInChildren<WheelController>();
-    }
+        wheelControllers = GetComponentsInChildren<WheelController>();
+    }*/
 
-    void Update()
+    void FixedUpdate()
     {
+        animateWheels();
+        moveVehicle();
+        steerVehicle();
 
-        float vInput = Input.GetAxis("Vertical");
-        float hInput = Input.GetAxis("Horizontal");
+        /*float _vInput = SimpleInput.GetAxis("Vertical");
+        float _hInput = SimpleInput.GetAxis("Horizontal");
 
         float forwardSpeed = Vector3.Dot(transform.forward, rigidBody.velocity);
 
@@ -37,9 +57,9 @@ public class CarContr : MonoBehaviour
 
         float currentSteerRange = Mathf.Lerp(steeringRange, steeringRangeAtMaxSpeed, speedFactor);
 
-        bool isAccelerating = Mathf.Sign(vInput) == Mathf.Sign(forwardSpeed);
+        bool isAccelerating = Mathf.Sign(_vInput) == Mathf.Sign(forwardSpeed);
 
-        foreach (var wheel in wheels)
+        foreach (var _wheel in wheelControllers)
         {
             if (wheel.steerable)
             {
@@ -48,17 +68,85 @@ public class CarContr : MonoBehaviour
 
             if (isAccelerating)
             {
-                if (wheel.motorized)
+                if (_wheel.motorized)
                 {
-                    wheel.WheelCollider.motorTorque = vInput * currentMotorTorque;
+                    _wheel.WheelCollider.motorTorque = _vInput * currentMotorTorque;
                 }
-                wheel.WheelCollider.brakeTorque = 0;
+                _wheel.WheelCollider.brakeTorque = 0;
             }
             else
             {
-                wheel.WheelCollider.brakeTorque = Mathf.Abs(vInput) * brakeTorque;
-                wheel.WheelCollider.motorTorque = 0;
+                _wheel.WheelCollider.brakeTorque = Mathf.Abs(_vInput) * brakeTorque;
+                _wheel.WheelCollider.motorTorque = 0;
             }
+        }*/
+    }
+
+    private void moveVehicle()
+    {
+        bool isAccelerating = Mathf.Sign(SimpleInput.GetAxis("Vertical")) == Mathf.Sign(motorTorque);
+
+        if (isAccelerating)
+        {
+            if(drive == driveType.allWheelDrive)
+            {
+                for (int i = 0; i < wheels.Length; i++)
+                {
+                    wheels[i].motorTorque = SimpleInput.GetAxis("Vertical") * (motorTorque / 4) * 7.0f;
+                }
+            }
+            else if(drive == driveType.rearWheelDrive)
+            {
+                for(int i =2; i < wheels.Length; i++)
+                {
+                    wheels[i].motorTorque = SimpleInput.GetAxis("Vertical") * (motorTorque / 2) * 5.0f;
+                }
+            }
+            else 
+            {
+                for(int i = 0; i < wheels.Length - 2; i++)
+                {
+                    wheels[i].motorTorque = SimpleInput.GetAxis("Vertical") * (motorTorque / 2) * 3.5f;
+                }
+            }
+        }
+        else
+        {
+            for (int i = 0; i < wheels.Length; i++)
+            {
+                wheels[i].brakeTorque = Mathf.Abs(SimpleInput.GetAxis("Vertical")) * brakeTorque;
+                wheels[i].motorTorque = 0;
+            }
+        }
+    }
+    private void steerVehicle()
+    {
+        if (SimpleInput.GetAxis("Horizontal") > 0)
+        {
+            wheels[0].steerAngle = Mathf.Rad2Deg * Mathf.Atan(2.55f / (radius + (1.5f / 2))) * SimpleInput.GetAxis("Horizontal");
+            wheels[1].steerAngle = Mathf.Rad2Deg * Mathf.Atan(2.55f / (radius - (1.5f / 2))) * SimpleInput.GetAxis("Horizontal");
+        }
+        else if (SimpleInput.GetAxis("Horizontal") < 0)
+        {
+            wheels[0].steerAngle = Mathf.Rad2Deg * Mathf.Atan(2.55f / (radius - (1.5f / 2))) * SimpleInput.GetAxis("Horizontal");
+            wheels[1].steerAngle = Mathf.Rad2Deg * Mathf.Atan(2.55f / (radius + (1.5f / 2))) * SimpleInput.GetAxis("Horizontal");
+        }
+        else
+        {
+            wheels[0].steerAngle = 0;
+            wheels[1].steerAngle = 0;
+        }
+    }
+    public void animateWheels()
+    {
+        Vector3 _wheelsPosition = Vector3.zero;
+        Quaternion _wheelRotation = Quaternion.identity;
+
+        for(int i = 0; i < wheels.Length; i++)
+        {
+            wheels[i].GetWorldPose(out _wheelsPosition, out _wheelRotation);
+            wheelMesh[i].transform.position = _wheelsPosition;
+            wheelMesh[i].transform.rotation = _wheelRotation;
         }
     }
 }

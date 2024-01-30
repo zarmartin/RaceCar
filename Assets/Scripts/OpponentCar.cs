@@ -38,7 +38,6 @@ public class OpponentCar : MonoBehaviour
             {
                 destinationReached = true;
             }
-
         }
     }
 

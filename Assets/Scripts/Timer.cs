@@ -33,11 +33,11 @@ public class Timer : MonoBehaviour
         }
         else if(countDownTimer == 0)
         {
-            playerCarController.motorTorque = 4500f;
-            playerCarController1.motorTorque = 4500f;
-            opponentCar.movingSpeed = 22f;
-            opponentCar1.movingSpeed = 25f;
-            opponentCar2.movingSpeed = 28f;
+            playerCarController.motorTorque = 650f;
+            playerCarController1.motorTorque = 500f;
+            opponentCar.movingSpeed = 32f;
+            opponentCar1.movingSpeed = 33f;
+            opponentCar2.movingSpeed = 35f;
         }
     }
 

@@ -42,12 +42,12 @@ public class CarController : MonoBehaviour
         rear_Left_Wheel.motorTorque = presentAcceleration;
         rear_Right_Wheel.motorTorque = presentAcceleration;
 
-        presentAcceleration = accelerationForce * Input.GetAxis("Vertical");
+        presentAcceleration = accelerationForce * SimpleInput.GetAxis("Vertical");
     }
 
     private void CarSteering()
     {
-        presentTurnAngle = wheelsTorque * Input.GetAxis("Horizontal");
+        presentTurnAngle = wheelsTorque * SimpleInput.GetAxis("Horizontal");
         front_Left_Wheel.steerAngle = presentTurnAngle;
         front_Right_Wheel.steerAngle = presentTurnAngle;
 
